@@ -1,5 +1,8 @@
 import Event from './entities/event.entity';
-
+// import Sequ
+import sequelize, { QueryTypes } from 'sequelize'
+import Workshop from './entities/workshop.entity';
+import Server from '../../server'
 
 export class EventsService {
 
@@ -83,9 +86,40 @@ export class EventsService {
     ]
     ```
      */
-
+    
   async getEventsWithWorkshops() {
-    throw new Error('TODO task 1');
+    const sqlQuery = "Select E1.id, E1.name, E1.createdAt, workshop_data.* from Event E1 Join (Select id as workshopId, start,end, eventId, name as workshopName, createdAt as workshopCreatedAt from Workshop) workshop_data on workshop_data.eventId = E1.id";
+    const app = Server.getApp()
+    try {
+      const events = await app.getDataSource().query(sqlQuery, { type: QueryTypes.SELECT });
+      let result: any = {}  
+      events.forEach((event: any) => {
+        const eventId = event.eventId;
+        const workShopData = {
+          id: event.workshopId,
+          name: event.workshopName,
+          start: event.start,
+          end: event.end,
+          createdAt: event.workshopCreatedAt,
+          eventId
+        }
+        if (result[eventId]) {
+          result[eventId].workshops.push(workShopData)
+        } else {
+          result[eventId] = {
+            id: eventId,
+            name: event.name,
+            createdAt: event.createdAt,
+            workshops: [workShopData]
+          } 
+        }
+      })
+
+      const response = Object.values(result);
+      return response
+    } catch(err) {
+      console.log('error ======>', err)
+    }
   }
 
   /* TODO: complete getFutureEventWithWorkshops so that it returns events with workshops, that have not yet started
