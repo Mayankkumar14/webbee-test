@@ -1,3 +1,6 @@
+import Server from '../../server'
+import sequelize, { QueryTypes } from 'sequelize'
+
 export class MenuItemsService {
 
   /* TODO: complete getMenuItems so that it returns a nested menu structure
@@ -76,6 +79,13 @@ export class MenuItemsService {
   */
 
   async getMenuItems() {
-    throw new Error('TODO in task 3');
+    const sqlQuery = "select child.* from menu_item child join menu_item parent on child.parentId = parent.id union all select parent.* from menu_item parent order by createdAt";
+    const app = Server.getApp()
+    try {
+        const menuItems = await app.getDataSource().query(sqlQuery, { type: QueryTypes.SELECT });
+        return menuItems
+    }   catch(err) {
+        console.log(err)
+    }
   }
 }
